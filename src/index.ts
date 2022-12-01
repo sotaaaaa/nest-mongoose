@@ -4,3 +4,5 @@
  * https://nestjs.com
  * MIT Licensed
  */
+
+export * from './mongoose';
