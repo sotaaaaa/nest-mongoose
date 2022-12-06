@@ -4,12 +4,16 @@ import { MongooseModule, MongooseModuleFactoryOptions } from '@nestjs/mongoose';
 import { DatabaseConfigs } from './types';
 
 @Global()
-@Module({})
+@Module({
+  imports: [ConfigModule],
+  providers: [ConfigService],
+  exports: [ConfigService],
+})
 export class MongooseConnectsModule {
   protected static configService: ConfigService;
 
   constructor(private readonly configService: ConfigService) {
-    console.log('Start', this.configService.get('database'));
+    console.log('Started', this.configService.get('database'));
     MongooseConnectsModule.configService = this.configService;
   }
 
