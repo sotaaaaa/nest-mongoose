@@ -1,47 +1,34 @@
 import { DynamicModule, Global, Logger, Module } from '@nestjs/common';
-import { ConfigService } from '@nestjs/config';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule, MongooseModuleFactoryOptions } from '@nestjs/mongoose';
 import { DatabaseConfigs } from './types';
 
 @Global()
 @Module({})
 export class MongooseConnectsModule {
-  static getConnects(configService: ConfigService) {
-    const database = configService.get<DatabaseConfigs>('database');
-    const { mongoose } = database || {};
-
-    // Trường hợp không có connects nào vào mongoose
-    if (mongoose.length) {
-      Logger.log('[Nest-mongoose] The mongoose connection list was not found');
-      return [];
-    }
-
-    const modules: DynamicModule[] = [];
-    for (const connect of mongoose) {
-      modules.push(
-        MongooseModule.forRoot(connect.uri, {
-          connectionName: connect.connectionName,
-          ...connect.options,
-        }),
-      );
-
-      const message = `[Nest-mongoose] Connected ${connect.connectionName} successfully`;
-      Logger.log(message);
-    }
-
-    return modules;
-  }
-
   static forRootAsync(): DynamicModule {
-    const imports: DynamicModule[] = [];
-    MongooseModule.forRootAsync({
-      inject: [ConfigService],
-      useFactory: async (configService: ConfigService) => {
-        imports.concat(this.getConnects(configService));
-        Logger.log('[Nest-mongoose] Build connect successfully');
-      },
+    const maxConnects = new Array(50).fill(0);
+    const imports = [];
+
+    /**
+     * Quy định tối đa chỉ được 50 connection
+     * Các connection từ 50 trở đi sẽ không được khởi tạo
+     */
+    maxConnects.forEach((_, index) => {
+      imports.push({
+        useModule: (configService: ConfigService) => {
+          const mongooses = configService.get('database.mongoose');
+          const { connectionName, uri } = mongooses[index] || {};
+          if (!connectionName || !uri) return null;
+
+          Logger.log('[Nest-mongoose] Connected ' + connectionName);
+          return MongooseModule.forRoot(connectionName, uri);
+        },
+        inject: [ConfigService],
+      });
     });
 
+    Logger.log('[Nest-mongoose] Connection count', imports.length);
     return {
       module: MongooseConnectsModule,
       imports: imports,
