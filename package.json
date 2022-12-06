@@ -1,6 +1,6 @@
 {
   "name": "@sotaaaaa/nest-mongoose",
-  "version": "1.0.12",
+  "version": "1.0.13",
   "private": false,
   "description": "NestJS - Mongoose module",
   "keywords": [

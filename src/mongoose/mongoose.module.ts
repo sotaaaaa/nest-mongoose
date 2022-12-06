@@ -23,10 +23,12 @@ export class MongooseCoreModule {
    * @param options
    * @returns
    */
-  static forPlugin(): DynamicModule {
+  static async forPlugin(): Promise<DynamicModule> {
+    const imports = await MongooseConnectsModule.forRootAsync();
+    
     return {
       module: MongooseCoreModule,
-      imports: [MongooseConnectsModule.forRootAsync()],
+      imports: [imports],
     };
   }
 }
