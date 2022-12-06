@@ -31,13 +31,14 @@ export class MongooseConnectsModule {
       return this.getConnects();
     }
 
+    console.log(MongooseConnectsModule.connects, 'TEST MODULE 1');
     return MongooseConnectsModule.connects;
   }
 
   static async forRootAsync(): Promise<DynamicModule> {
-    const connects = await this.getConnects();
+    const connects = this.getConnects();
     const imports = [];
-    console.log(connects, 'TEST MODULE 2');
+    // console.log(connects, 'TEST MODULE 2');
 
     /**
      * Quy định tối đa chỉ được 50 connection
