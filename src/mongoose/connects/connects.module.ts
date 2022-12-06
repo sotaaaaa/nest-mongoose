@@ -17,13 +17,19 @@ export class MongooseConnectsModule {
     MongooseConnectsModule.connects = this.configService.get('database');
   }
 
-  static forRootAsync(): DynamicModule {
+  static getConnects() {
     if (!MongooseConnectsModule.connects) {
       Logger.log('[MongooseConnects] Retry load configs');
-      setTimeout(MongooseConnectsModule.forRootAsync(), 1000);
+      setTimeout(() => this.getConnects(), 1000);
     }
+
+    return MongooseConnectsModule.connects;
+  }
+
+  static forRootAsync(): DynamicModule {
+    const connects = this.getConnects();
     const imports = [];
-    console.log(MongooseConnectsModule.connects, 'TEST MODULE 2');
+    console.log(connects, 'TEST MODULE 2');
 
     /**
      * Quy định tối đa chỉ được 50 connection
