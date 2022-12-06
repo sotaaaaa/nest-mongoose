@@ -36,8 +36,13 @@ export class MongooseConnectsModule {
   }
 
   static async forRootAsync(): Promise<DynamicModule> {
-    const connects = this.getConnects();
-    const imports = [];
+    return new Promise((res) => {
+      this.getConnects().then((connects) => {
+        const imports = [];
+
+        res({ module: MongooseConnectsModule, imports });
+      });
+    });
     // console.log(connects, 'TEST MODULE 2');
 
     /**
@@ -57,10 +62,5 @@ export class MongooseConnectsModule {
     //     inject: [ConfigService],
     //   });
     // });
-
-    return {
-      module: MongooseConnectsModule,
-      imports: imports,
-    };
   }
 }
