@@ -10,20 +10,17 @@ import { DatabaseConfigs } from './types';
   exports: [ConfigService],
 })
 export class MongooseConnectsModule {
-  protected static configService: ConfigService;
+  protected static connects: Record<string, any>[];
 
   constructor(private readonly configService: ConfigService) {
     console.log('Started', this.configService.get('database'));
-    MongooseConnectsModule.configService = this.configService;
+    MongooseConnectsModule.connects = this.configService.get('database');
   }
 
   static forRootAsync(): DynamicModule {
     // const maxConnects = new Array(50).fill(0);
     const imports = [];
-    console.log(
-      MongooseConnectsModule.configService.get('database'),
-      'TEST MODULE',
-    );
+    console.log(MongooseConnectsModule.connects, 'TEST MODULE 2');
 
     /**
      * Quy định tối đa chỉ được 50 connection
