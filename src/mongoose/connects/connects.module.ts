@@ -17,17 +17,25 @@ export class MongooseConnectsModule {
     MongooseConnectsModule.connects = this.configService.get('database');
   }
 
-  static getConnects() {
+  static async delay(ms: number) {
+    return new Promise(function (resolve) {
+      setTimeout(resolve, ms);
+    });
+  }
+
+  static async getConnects(): Promise<Record<string, any>[]> {
     if (!MongooseConnectsModule.connects) {
+      await this.delay(500);
+
       Logger.log('[MongooseConnects] Retry load configs');
-      setTimeout(() => this.getConnects(), 1000);
+      return this.getConnects();
     }
 
     return MongooseConnectsModule.connects;
   }
 
-  static forRootAsync(): DynamicModule {
-    const connects = this.getConnects();
+  static async forRootAsync(): Promise<DynamicModule> {
+    const connects = await this.getConnects();
     const imports = [];
     console.log(connects, 'TEST MODULE 2');
 
