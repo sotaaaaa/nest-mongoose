@@ -20,7 +20,10 @@ export class MongooseConnectsModule {
   static forRootAsync(): DynamicModule {
     // const maxConnects = new Array(50).fill(0);
     const imports = [];
-    // console.log(this.configService.get('database'), 'TEST MODULE');
+    console.log(
+      MongooseConnectsModule.configService.get('database'),
+      'TEST MODULE',
+    );
 
     /**
      * Quy định tối đa chỉ được 50 connection
