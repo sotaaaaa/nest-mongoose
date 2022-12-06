@@ -18,7 +18,10 @@ export class MongooseConnectsModule {
   }
 
   static forRootAsync(): DynamicModule {
-    // const maxConnects = new Array(50).fill(0);
+    if (!MongooseConnectsModule.connects) {
+      Logger.log('[MongooseConnects] Retry load configs');
+      setTimeout(MongooseConnectsModule.forRootAsync(), 1000);
+    }
     const imports = [];
     console.log(MongooseConnectsModule.connects, 'TEST MODULE 2');
 
