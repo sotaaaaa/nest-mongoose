@@ -40,6 +40,7 @@ export class MongooseConnectsModule {
       this.getConnects().then((connects) => {
         const imports = [];
 
+        console.log(connects, 'TEST MODULE 22222');
         res({ module: MongooseConnectsModule, imports });
       });
     });
