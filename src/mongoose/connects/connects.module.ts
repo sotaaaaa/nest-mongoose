@@ -6,29 +6,36 @@ import { DatabaseConfigs } from './types';
 @Global()
 @Module({})
 export class MongooseConnectsModule {
+  protected static configService: ConfigService;
+
+  constructor(private readonly configService: ConfigService) {
+    console.log('Start', this.configService.get('database'));
+    MongooseConnectsModule.configService = this.configService;
+  }
+
   static forRootAsync(): DynamicModule {
-    const maxConnects = new Array(50).fill(0);
+    // const maxConnects = new Array(50).fill(0);
     const imports = [];
+    console.log(this.configService.get('database'), 'TEST MODULE');
 
     /**
      * Quy định tối đa chỉ được 50 connection
      * Các connection từ 50 trở đi sẽ không được khởi tạo
      */
-    maxConnects.forEach((_, index) => {
-      imports.push({
-        useModule: (configService: ConfigService) => {
-          const mongooses = configService.get('database.mongoose');
-          const { connectionName, uri } = mongooses[index] || {};
-          if (!connectionName || !uri) return null;
+    // maxConnects.forEach((_, index) => {
+    //   imports.push({
+    //     useModule: (configService: ConfigService) => {
+    //       const mongooses = configService.get('database.mongoose');
+    //       const { connectionName, uri } = mongooses[index] || {};
+    //       if (!connectionName || !uri) return null;
 
-          Logger.log('[Nest-mongoose] Connected ' + connectionName);
-          return MongooseModule.forRoot(connectionName, uri);
-        },
-        inject: [ConfigService],
-      });
-    });
+    //       Logger.log('[Nest-mongoose] Connected ' + connectionName);
+    //       return MongooseModule.forRoot(connectionName, uri);
+    //     },
+    //     inject: [ConfigService],
+    //   });
+    // });
 
-    Logger.log('[Nest-mongoose] Connection count', imports.length);
     return {
       module: MongooseConnectsModule,
       imports: imports,
