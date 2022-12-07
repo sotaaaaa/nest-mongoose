@@ -1,4 +1,5 @@
-import { DynamicModule, Module } from '@nestjs/common';
+import { DynamicModule, Logger, Module } from '@nestjs/common';
+import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
 import { MongooseConnectsModule } from './connects';
 
@@ -24,11 +25,41 @@ export class MongooseCoreModule {
    * @returns
    */
   static async forPlugin(): Promise<DynamicModule> {
-    const imports = await MongooseConnectsModule.forRootAsync();
-    
+    const maxConnects = new Array(10).fill(false);
+    const imports: DynamicModule[] = [];
+    let filled = 0;
+
+    maxConnects.forEach((_, index) => {
+      imports.push(
+        MongooseConnectsModule.forRootAsync({
+          imports: [ConfigModule],
+          useFactory: (configService: ConfigService) => {
+            const connects = configService.get('database.mongoose') || [];
+            const connect = connects[index];
+
+            // Lưu lại các module hợp lệ
+            if (connect) {
+              filled++;
+
+              const { connectionName, options, uri } = connect || {};
+              Logger.log('[NestMongoose] Connected to ' + connectionName);
+              return {
+                ...options,
+                connectionName,
+                uri,
+              };
+            }
+
+            return { connectionName: '', uri: '' };
+          },
+          inject: [ConfigService],
+        }),
+      );
+    });
+
     return {
       module: MongooseCoreModule,
-      imports: [imports],
+      imports: imports.slice(0, filled),
     };
   }
 }

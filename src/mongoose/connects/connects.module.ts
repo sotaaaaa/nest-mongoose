@@ -1,67 +1,62 @@
-import { DynamicModule, Global, Logger, Module } from '@nestjs/common';
+import {
+  DynamicModule,
+  Global,
+  Logger,
+  Module,
+  Provider,
+} from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule, MongooseModuleFactoryOptions } from '@nestjs/mongoose';
-import { DatabaseConfigs } from './types';
+import { MONGODB_MODULE_OPTIONS } from './connects.constant';
+import {
+  MongooseModuleAsyncOptions,
+  MongooseModuleOptionsFactory,
+} from './types';
 
 @Global()
-@Module({
-  imports: [ConfigModule],
-  providers: [ConfigService],
-  exports: [ConfigService],
-})
+@Module({})
 export class MongooseConnectsModule {
-  protected static connects: Record<string, any>[];
-
-  constructor(private readonly configService: ConfigService) {
-    console.log('Started', this.configService.get('database'));
-    MongooseConnectsModule.connects = this.configService.get('database');
-  }
-
-  static async delay(ms: number) {
-    return new Promise(function (resolve) {
-      setTimeout(resolve, ms);
-    });
-  }
-
-  static async getConnects(): Promise<Record<string, any>[]> {
-    if (!MongooseConnectsModule.connects) {
-      await this.delay(500);
-
-      Logger.log('[MongooseConnects] Retry load configs');
-      return this.getConnects();
+  private static createAsyncProviders(
+    options: MongooseModuleAsyncOptions,
+  ): Provider[] {
+    if (options.useExisting || options.useFactory) {
+      return [this.createAsyncOptionsProvider(options)];
     }
-
-    console.log(MongooseConnectsModule.connects, 'TEST MODULE 1');
-    return MongooseConnectsModule.connects;
+    return [
+      this.createAsyncOptionsProvider(options),
+      {
+        provide: options.useClass,
+        useClass: options.useClass,
+      },
+    ];
   }
 
-  static async forRootAsync(): Promise<DynamicModule> {
-    return new Promise((res) => {
-      this.getConnects().then((connects) => {
-        const imports = [];
+  private static createAsyncOptionsProvider(
+    options: MongooseModuleAsyncOptions,
+  ): Provider {
+    if (options.useFactory) {
+      return {
+        provide: MONGODB_MODULE_OPTIONS,
+        useFactory: options.useFactory,
+        inject: options.inject || [],
+      };
+    }
+    return {
+      provide: MONGODB_MODULE_OPTIONS,
+      useFactory: async (optionsFactory: MongooseModuleOptionsFactory) =>
+        optionsFactory.createMongooseOptions(),
+      inject: [options.useExisting || options.useClass],
+    };
+  }
 
-        console.log(connects, 'TEST MODULE 22222');
-        res({ module: MongooseConnectsModule, imports });
-      });
-    });
-    // console.log(connects, 'TEST MODULE 2');
-
-    /**
-     * Quy định tối đa chỉ được 50 connection
-     * Các connection từ 50 trở đi sẽ không được khởi tạo
-     */
-    // maxConnects.forEach((_, index) => {
-    //   imports.push({
-    //     useModule: (configService: ConfigService) => {
-    //       const mongooses = configService.get('database.mongoose');
-    //       const { connectionName, uri } = mongooses[index] || {};
-    //       if (!connectionName || !uri) return null;
-
-    //       Logger.log('[Nest-mongoose] Connected ' + connectionName);
-    //       return MongooseModule.forRoot(connectionName, uri);
-    //     },
-    //     inject: [ConfigService],
-    //   });
-    // });
+  static forRootAsync(options: MongooseModuleAsyncOptions): DynamicModule {
+    return {
+      module: MongooseConnectsModule,
+      imports: options.imports,
+      providers: [
+        ...this.createAsyncProviders(options),
+        ...(options.extraProviders || []),
+      ],
+    };
   }
 }
