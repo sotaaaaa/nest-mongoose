@@ -23,10 +23,9 @@ export class MongooseCoreModule {
    * @param options
    * @returns
    */
-  static async forPlugin(): Promise<DynamicModule> {
+  static forPlugin(): DynamicModule {
     const maxConnects = new Array(10).fill(false);
     const imports: DynamicModule[] = [];
-    let filled = 0;
 
     Logger.log('[NestMongoose] Connecting to database...');
     maxConnects.forEach((_, index) => {
@@ -39,8 +38,6 @@ export class MongooseCoreModule {
 
             // Lưu lại các module hợp lệ
             if (connect) {
-              filled++;
-
               const { connectionName, options, uri } = connect || {};
               Logger.log('[NestMongoose] Connected to ' + connectionName);
               return {
@@ -50,22 +47,18 @@ export class MongooseCoreModule {
               };
             }
 
-            return { connectionName: '', uri: '' };
+            return null;
           },
           inject: [ConfigService],
         }),
       );
     });
 
-    Logger.log('[NestMongoose] Found ' + filled + ' connections');
-    const fillImports = imports.slice(0, filled);
-    Logger.log(
-      '[NestMongoose] Connected ' + fillImports.length + ' connections',
-    );
+    Logger.log('[NestMongoose] Connected to all connections');
 
     return {
       module: MongooseCoreModule,
-      imports: fillImports,
+      imports: imports,
     };
   }
 }
