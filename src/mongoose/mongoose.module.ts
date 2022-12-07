@@ -28,6 +28,7 @@ export class MongooseCoreModule {
     const imports: DynamicModule[] = [];
     let filled = 0;
 
+    Logger.log('[NestMongoose] Connecting to database...');
     maxConnects.forEach((_, index) => {
       imports.push(
         MongooseModule.forRootAsync({
@@ -56,6 +57,7 @@ export class MongooseCoreModule {
       );
     });
 
+    Logger.log('[NestMongoose] Found ' + filled + ' connections');
     const fillImports = imports.slice(0, filled);
     Logger.log(
       '[NestMongoose] Connected ' + fillImports.length + ' connections',
