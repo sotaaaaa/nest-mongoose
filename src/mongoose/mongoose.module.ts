@@ -1,7 +1,6 @@
 import { DynamicModule, Logger, Module } from '@nestjs/common';
 import { ConfigModule, ConfigService } from '@nestjs/config';
 import { MongooseModule, MongooseModuleOptions } from '@nestjs/mongoose';
-import { MongooseConnectsModule } from './connects';
 
 @Module({})
 export class MongooseCoreModule {
@@ -31,7 +30,7 @@ export class MongooseCoreModule {
 
     maxConnects.forEach((_, index) => {
       imports.push(
-        MongooseConnectsModule.forRootAsync({
+        MongooseModule.forRootAsync({
           imports: [ConfigModule],
           useFactory: (configService: ConfigService) => {
             const connects = configService.get('database.mongoose') || [];
@@ -57,9 +56,14 @@ export class MongooseCoreModule {
       );
     });
 
+    const fillImports = imports.slice(0, filled);
+    Logger.log(
+      '[NestMongoose] Connected ' + fillImports.length + ' connections',
+    );
+
     return {
       module: MongooseCoreModule,
-      imports: imports.slice(0, filled),
+      imports: fillImports,
     };
   }
 }
